@@ -3,66 +3,77 @@ import random
 from room import Room
 from field import Field
 
-# field_size = 9
-# center_int = int(field_size / 2)
-# center_coord = (center_int, center_int)
-# free_coords = []
-# busy_coords = []
-# blacklist = []
-# # cootds_list = [(x,y) for x in range(field_size) for y in range(field_size)]
-# field = numpy.zeros((field_size,field_size))
+field_size = 9
+base_field = Field(field_size)
 
-# def check_blacklist(last_coord):
-#     x = last_coord[1]
-#     y = last_coord[0]
-#     check_list = [(y, x+1),(y, x-1), (y+1, x), (y-1, x)]
-#     for coord in check_list:
-#         t_x = coord[1]
-#         t_y = coord[0]
-#         tmp_check_list = [(t_y, t_x+1),(t_y, t_x-1), (t_y+1, t_x), (t_y-1, t_x)]
-#         for s_coord in tmp_check_list:
-#             if s_coord in busy_coords and \
-#                s_coord != last_coord and \
-#                s_coord not in blacklist: 
-#                 blacklist.append(coord)
-#                 break
-        
-#     print(f'blist: {blacklist}')
-            
+def generation(count=10, size=field_size):
+    tmp_field = Field(size)
+    tmp_field.place_room(int(size/2),int(size/2))
+    for i in range(count):
+        random_cell = random.choice(tmp_field.white_list)
+        tmp_field.place_room(random_cell[0], random_cell[1])
+    return tmp_field
 
-# def check_free(last_coord):
-#     x = last_coord[1]
-#     y = last_coord[0]
-#     check_list = [(y, x+1),(y, x-1), (y+1, x), (y-1, x)]
-#     for coord in check_list:
-#         if field[coord] == 0 and coord not in blacklist: free_coords.append(coord)
-        
-#     print(f'wlist: {free_coords}')
 
-# def start_generate(count = 10):
-#     for i in range(count):
-#         random_coord = random.choice(free_coords)
-#         place_room(random_coord)
+def create_html(field=base_field, size=field_size):
+    html = """
+    <html><body><div class="aaa"><table>
+    """
+    print(len(field))
+    for y in range(len(field)):
+        html += """<tr>"""
+        for x in range(len(field[y])):
+            html += f"<td onclick=send({y},{x}) class="
+            try:
+                if field[x][y].is_empty: 
+                    if [x, y] in field.white_list: html += "free"
+                    else: html += "empty"
+                elif field[x][y].is_locked: html += "lock"
+                else: html += "used"
+            except: html += "empty"
+            html += "></td>"
 
-# def place_room(coord):
-#     field[coord] = 1
-#     busy_coords.append(coord)
+        html += """</tr>"""
+    html += """
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    </table></div></body></html>
+    <script>
+function send(x, y){
+$.ajax({
+    url: '/test/post',         /* Куда отправить запрос */
+    method: 'get',             /* Метод запроса (post или get) */
+    dataType: 'html',          /* Тип данных в ответе (xml, json, script, html). */
+    data: {x: x,
+            y:y
+    },     /* Данные передаваемые в массиве */
+    success: function(data){ 
+        $("html").html(data) /* В переменной data содержится ответ от index.php. */
+    }
+    });
+}
+"""
+    html += """</script>
+    <style>
+    table{
+        width: 100%;
+        height: 100%;
+    }
+    td {
+        border: 1px solid black;
+        margin: 1px 1px;
+        min-width: """ + f"{100/size}%" + """;
+        min-height: """ + f"{100/size}%" + """;
+    }
+    .free {
+        background-color: green;
+    }
+    .used {
+        background-color: blue;
+    }
+    .lock {
+        background-color: red;
+    }
+    </stile>
+    """
     
-#     check_blacklist(coord)
-#     check_free(coord)
-#     # try:
-#     #     free_coords.remove(coord)
-#     # except: print("Hasn't in wlist")
-
-#     print(f'placed: {coord}')
-
-
-
-# place_room(center_coord)
-
-# start_generate()
-
-field = Field(9)
-field.check_free_rooms(Room(4,4))
-print(field.white_list)
-print(field)
+    return html
