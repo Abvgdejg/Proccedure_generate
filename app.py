@@ -13,8 +13,8 @@ app = Flask(__name__, template_folder=templates_dir)
 
 @app.route("/")
 def index():
-    random_field = generate.generation(count=10, size=11)
-    return generate.create_html(random_field, 11)
+    random_field = generate.generation(count=4, size=11, return_html_field=True)
+    return render_template("index.html", field=random_field)
 
 @app.route('/test/post', methods=["GET", "POST"])
 def test_post():
@@ -24,6 +24,11 @@ def test_post():
     generate.base_field.place_room(x, y)
     print([x, y], "\n" , generate.field)
     return generate.create_html()
+
+@app.route('/test/gen', methods=["GET", "POST"])
+def test_gen():
+    x = int(request.args.get("x"))
+    y = int(request.args.get("y"))
 
 def create_feild():
     return

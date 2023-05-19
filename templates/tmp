@@ -1,0 +1,23 @@
+<!-- {% for y in range(len(field)) %}
+                <tr>
+                {% for x in range(len(field[y])) %}
+                {% if field[x][y].place_id != None %}
+                    {% set id = field[x][y].place_id %}
+                {% else %}
+                    {% set id = field[x][y].place_id %}
+                {% endif %}
+                    {% if field[x][y].is_empty %}
+                        {% if [x, y] in field.white_list %}
+                        <td onclick=send({y},{x}) class="free">{{ id }}</td>
+                        {% else %}
+                        <td onclick=send({y},{x}) class="empty">{{ id }}</td>
+                        {% endif %}
+                    {% elif field[x][y].is_locked %}
+                    <td onclick=send({y},{x}) class="lock">{{ id }}</td>
+                    {% else %}
+                    <td onclick=send({y},{x}) class="used">{{ id }}</td>
+                    {% endif %}
+                
+                    {% endfor %}
+                </tr>
+            {% endfor %} -->

@@ -3,32 +3,30 @@ from cell import Status, Cell
 
 class Field():
 
-    field = []
-
-    rooms_list = []
-
-    black_list = []
-    white_list = []
 
     def __init__(self, size = 5):
-        
+        self.field = []
+
+        self.rooms_list = []
+
+        self.black_list = []
+        self.white_list = []
+
+        self.place_counter = 0
+
         for x in range(size):
             self.field.append([])
             for y in range(size):
                 self.field[x].append(Cell(x=x, y=y))
 
-        print(len(self.field))
-
-
-
+        print(len(self.field), self.rooms_list, self.black_list, self.white_list)
 
     def place_room(self, y, x):
         
-        self.rooms_list.append([x,y])
         self.field[x][y].set(Room())
-        try:
-            self.white_list.remove([x,y])
-        except:pass
+        self.field[x][y].place_id = self.place_counter
+        self.field[x][y].change_state(Status.used)
+        self.place_counter += 1
 
         self.place_handler(x,y)
 
@@ -42,24 +40,16 @@ class Field():
             
 
     def check_for_whitelist(self, x,y):
-        if self.field[x][y].is_empty and \
-            [x, y] not in self.white_list and \
-            not self.field[x][y].is_locked:
-                self.white_list.append([x, y])
+        cell = self.field[x][y]
+        if cell.is_free: return
+        if cell.is_empty: cell.change_state(Status.free)
 
     def check_for_blacklist(self, x,y):
-        self.field[x][y].connect()
-        if self.field[x][y].max_connected and \
-           not self.field[x][y].is_used: 
-                self.add_to_blacklist(x,y)
+        cell = self.field[x][y]
+        if cell.is_locked: return
+        if cell.is_free: cell.connect()
+        if cell.max_connected: cell.change_state(Status.locked)
 
-    def add_to_blacklist(self, x,y):
-        self.black_list.append([x, y])
-        try:
-            self.white_list.remove([x, y])
-        except:pass
-        self.field[x][y].status = Status.locked
-    
     def __repr__(self) -> str:
         res = ""
         for x in range(len(self.field)):
