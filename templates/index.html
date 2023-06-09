@@ -2,26 +2,31 @@
 <body>
     <div class="aaa">
         <table>
-        {% for y in range(field|length) %}
+        {% for x in range(field|length) %}
             <tr>
-            {% for x in range(field[y]|length) %}
+            {% for y in range(field[x]|length) %}
                 {% if field[x][y][1] != None %}
                     {% set id = field[x][y][1] %}
                 {% else %}
                     {% set id = "" %}
                 {% endif %}
-                <td onclick=send({y},{x}) class="{{ field[x][y][0] }}">{{ id }}</td>
+                <td onclick=send({x},{y}) class="{{ field[x][y][0] }}">
+                    {% if id != "" %}
+                        {{ id }}
+                    {% else  %}
+                        {{ x }}:{{ y }}
+                    {% endif %}
+                </td>
         
             {% endfor %}
             </tr>
         {% endfor %}
         </table>
     </div> 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.js"></script>
 </body>
 </html>
 <script>
-// $(".aaa").html("{{ field }}")
 
 function send(x, y){
 $.ajax({

@@ -1,71 +1,85 @@
-from room import Room
 from cell import Status, Cell
+import random
 
 class Field():
 
+    def __init__(self, size = 9, gen_count = 10, whitelist = []):
+        self.size = size
+        self.gen_count = gen_count
+        self.field = self.create_field()
+        self.whitelist = whitelist
 
-    def __init__(self, size = 5):
-        self.field = []
-
-        self.rooms_list = []
-
-        self.black_list = []
-        self.white_list = []
-
-        self.place_counter = 0
-
-        for x in range(size):
-            self.field.append([])
-            for y in range(size):
-                self.field[x].append(Cell(x=x, y=y))
-
-        print(len(self.field), self.rooms_list, self.black_list, self.white_list)
-
-    def place_room(self, y, x):
+    def create_field(self):
+        grid_cells = []
+        for x in range(self.size):
+            grid_cells.append([])
+            for y in range(self.size):
+                grid_cells[x].append(Cell(x, y))
         
-        self.field[x][y].set(Room())
-        self.field[x][y].place_id = self.place_counter
-        self.field[x][y].change_state(Status.used)
-        self.place_counter += 1
+        return grid_cells
 
-        self.place_handler(x,y)
+    def place_room(self, x,y, id):
+        self.field[x][y].status = "used"
+        self.field[x][y].id = id
 
-
-    def place_handler(self, x,y):
-        
-        check_list = [[x+1, y],[x-1, y], [x, y+1], [x, y-1]]
-        for x, y in check_list:
-            self.check_for_blacklist(x,y)
-            self.check_for_whitelist(x,y)
+        neighbors = [[x, y - 1], [x + 1, y],
+                    [x, y + 1], [x - 1, y]]
+        for neighbor in neighbors:
+            x, y = neighbor[0], neighbor[1]
+            if x < 0 or x > self.size - 1 or y < 0 or y > self.size - 1:
+                continue
             
+            cell = self.field[x][y]
+            cell.connections += 1
+            if  cell.connections >= 2 and cell.status != "used": 
+                if [x,y] in self.whitelist: self.whitelist.remove([x,y])
+                cell.status = "banned" 
 
-    def check_for_whitelist(self, x,y):
-        cell = self.field[x][y]
-        if cell.is_free: return
-        if cell.is_empty: cell.change_state(Status.free)
 
-    def check_for_blacklist(self, x,y):
-        cell = self.field[x][y]
-        if cell.is_locked: return
-        if cell.is_free: cell.connect()
-        if cell.max_connected: cell.change_state(Status.locked)
 
-    def __repr__(self) -> str:
-        res = ""
-        for x in range(len(self.field)):
-            for y in range(len(self.field[x])):
-                if self.field[x][y].is_empty: 
-                    if [x, y] in self.white_list: res += "f"
-                    else: res += "0"
-                elif self.field[x][y].is_locked: res += "b"
-                else: res += "1"
-                res += " | "
-            res += "\n"   
+    def update_whitelist(self, x,y):
+        neighbors = [[x, y - 1], [x + 1, y],
+                    [x, y + 1], [x - 1, y]]
+        for neighbor in neighbors:
+            x, y = neighbor[0], neighbor[1]
+            if x < 0 or x > self.size - 1 or y < 0 or y > self.size - 1:
+                continue
+
+            if  self.field[x][y].status != "banned" \
+                and self.field[x][y].status != "used" \
+                and ([x,y] not in self.whitelist):
+                    self.whitelist.append([x,y])
+                    self.field[x][y].status = "free"
         
-        return res
 
-    def __getitem__(self, key):
-        return self.field[key]
+    def reqursive_gen(self, iteration_count = "auto"):
+        if iteration_count == "auto": iteration_count = self.gen_count
+        if iteration_count <= 0: return self.field
+        else: iteration_count -= 1
 
-    def __len__(self):
-        return len(self.field)   
+        next_cell = random.choice(self.whitelist)
+        x, y = next_cell[0], next_cell[1]
+
+        self.whitelist.remove(next_cell)
+        self.place_room(x,y, iteration_count)
+
+        self.update_whitelist(x,y) 
+
+        return self.reqursive_gen(iteration_count)
+
+    def show_field(self) -> str:
+            res = ""
+            for x in range(len(self.field)):
+                for y in range(len(self.field[x])):
+                    if self.field[x][y].status == None: res += "0"
+                    elif self.field[x][y].status == "free": res += "f"
+                    elif self.field[x][y].status == "banned": res += "b"
+                    else: res += "1"
+                    res += " | "
+                res += "\n"   
+            
+            return res
+
+    def mono_gen(self):
+        self.reqursive_gen(1)
+        return self.field
